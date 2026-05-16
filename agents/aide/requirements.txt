@@ -1,1 +1,4 @@
 git+https://github.com/thesofakillers/aideml@v6.3.3
+# openai passes httpx.Client(proxies=...); httpx 0.28+ removed `proxies` (TypeError on first API call).
+httpx>=0.27.2,<0.28
+# openai upgrade is applied in Dockerfile (aideml requires openai==1.48.0, which conflicts in one pip resolve).

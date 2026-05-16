@@ -17,12 +17,19 @@ kwargs_common: &kwargs_common
   exec.timeout: 32400 # 9 hours limit _per step_, to match max of kaggle.com
   copy_data: False # use symbolic links
 
+# OpenAI Chat Completions: code path forwards reasoning_effort (patched aideml).
+# Feedback uses function tools; reasoning_effort is omitted there (gpt-5.5 rejects tools + reasoning_effort on /v1/chat/completions).
+openai_gpt55_no_reasoning: &openai_gpt55_no_reasoning
+  agent.code.model: gpt-5.5
+  agent.feedback.model: gpt-5.5
+  agent.code.reasoning_effort: "none"
+  agent.feedback.reasoning_effort: "none"
+
 aide:
   <<: *defaults
   kwargs:
     <<: *kwargs_common
-    agent.code.model: gpt-4o-2024-08-06
-    agent.feedback.model: gpt-4o-2024-08-06
+    <<: *openai_gpt55_no_reasoning
     agent.steps: *step_count
   env_vars:
     <<: *env_vars
@@ -32,8 +39,7 @@ aide/dev:
   <<: *defaults
   kwargs:
     <<: *kwargs_common
-    agent.code.model: gpt-4o-2024-08-06
-    agent.feedback.model: gpt-4o-2024-08-06
+    <<: *openai_gpt55_no_reasoning
     agent.steps: 8
   env_vars:
     <<: *env_vars
@@ -45,7 +51,8 @@ aide/o1-preview:
     <<: *kwargs_common
     agent.code.model: o1-preview
     agent.code.temp: 1
-    agent.feedback.model: gpt-4o-2024-08-06
+    agent.feedback.model: gpt-5.5
+    agent.feedback.reasoning_effort: "none"
     agent.steps: *step_count
     agent.convert_system_to_user: True
   env_vars:
@@ -101,7 +108,8 @@ aide/claude-3-5-sonnet:
   kwargs:
     <<: *kwargs_common
     agent.code.model: claude-3-5-sonnet-20240620
-    agent.feedback.model: gpt-4o-2024-08-06
+    agent.feedback.model: gpt-5.5
+    agent.feedback.reasoning_effort: "none"
     agent.steps: *step_count
   env_vars:
     <<: *env_vars
@@ -112,7 +120,8 @@ aide/llama-3.1-405b-instruct:
   kwargs:
     <<: *kwargs_common
     agent.code.model: meta-llama/llama-3.1-405b-instruct
-    agent.feedback.model: gpt-4o-2024-08-06
+    agent.feedback.model: gpt-5.5
+    agent.feedback.reasoning_effort: "none"
     agent.steps: *step_count
   env_vars:
     <<: *env_vars
@@ -123,7 +132,8 @@ aide/gemini-1.5-pro:
   kwargs:
     <<: *kwargs_common
     agent.code.model: gemini-1.5-pro-002
-    agent.feedback.model: gpt-4o-2024-08-06
+    agent.feedback.model: gpt-5.5
+    agent.feedback.reasoning_effort: "none"
     agent.steps: *step_count
   env_vars:
     <<: *env_vars
@@ -133,8 +143,7 @@ aide/obfuscated:
   <<: *defaults
   kwargs:
     <<: *kwargs_common
-    agent.code.model: gpt-4o-2024-08-06
-    agent.feedback.model: gpt-4o-2024-08-06
+    <<: *openai_gpt55_no_reasoning
     agent.steps: *step_count
     agent.obfuscate: True
   env_vars:

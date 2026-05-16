@@ -1,0 +1,32 @@
+diff --git a/aide/agent.py b/aide/agent.py
+--- a/aide/agent.py
++++ b/aide/agent.py
+@@ -187,13 +187,16 @@
+         """Generate a natural language plan + code in the same LLM call and split them apart."""
+         completion_text = None
+         for _ in range(retries):
+-            completion_text = query(
++            qkwargs: dict = dict(
+                 system_message=prompt,
+                 user_message=None,
+                 model=self.acfg.code.model,
+                 temperature=self.acfg.code.temp,
+                 convert_system_to_user=self.acfg.convert_system_to_user,
+             )
++            if self.acfg.code.reasoning_effort is not None:
++                qkwargs["reasoning_effort"] = self.acfg.code.reasoning_effort
++            completion_text = query(**qkwargs)
+ 
+             code = extract_code(completion_text)
+             nl_text = extract_text_up_to_code(completion_text)
+diff --git a/aide/utils/config.py b/aide/utils/config.py
+--- a/aide/utils/config.py
++++ b/aide/utils/config.py
+@@ -29,6 +29,7 @@
+ class StageConfig:
+     model: str
+     temp: float
++    reasoning_effort: str | None = None
+ 
+ 
+ @dataclass
