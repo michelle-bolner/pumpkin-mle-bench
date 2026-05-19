@@ -398,10 +398,27 @@ def ensure_leaderboard_exists(competition: Competition, force: bool = False) -> 
         raise RuntimeError(f"Failed to download leaderboard for competition `{competition.id}`.")
 
 
+def _is_git_lfs_pointer(path: Path) -> bool:
+    with open(path, encoding="utf-8") as f:
+        return f.readline().strip() == "version https://git-lfs.github.com/spec/v1"
+
+
 def get_leaderboard(competition: Competition) -> pd.DataFrame:
     leaderboard_path = competition.leaderboard
     assert (
         leaderboard_path.exists()
     ), f"Leaderboard not found locally for competition `{competition.id}`."
+    if _is_git_lfs_pointer(leaderboard_path):
+        raise ValueError(
+            f"Leaderboard for `{competition.id}` is a Git LFS pointer, not a CSV. "
+            "Run `git lfs pull` or "
+            f"`mlebench dev download-leaderboard -c {competition.id} --force`."
+        )
     leaderboard_df = pd.read_csv(leaderboard_path)
+    if "score" not in leaderboard_df.columns:
+        raise ValueError(
+            f"Leaderboard for `{competition.id}` must have a `score` column (for medal thresholds); "
+            f"found columns: {list(leaderboard_df.columns)}. "
+            f"Run `mlebench dev download-leaderboard -c {competition.id} --force`."
+        )
     return leaderboard_df

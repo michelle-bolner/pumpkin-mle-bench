@@ -16,7 +16,8 @@ python run_agent.py --agent-id aide --competition-set experiments/splits/superli
 
 python experiments/make_submission.py --metadata runs/<run-group>/metadata.json --output runs/<run-group>/submission.jsonl
 
-# Grade submission
+# Grade submission (leaderboard.csv must be real CSV, not a Git LFS pointer)
+git lfs pull   # or: mlebench dev download-leaderboard -c aerial-cactus-identification --force
 mlebench grade --submission runs/<run_group>/submission.jsonl --output-dir runs/<run_group>
 ```
 

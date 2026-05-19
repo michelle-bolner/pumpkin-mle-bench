@@ -57,10 +57,20 @@ def execute_agent(container: Container, agent: Agent, logger: logging.Logger):
         cmd += [f"{key}={value}" for key, value in agent.kwargs.items()]
 
     logger.info("Running agent...")
-    exit_code, output = container.exec_run(cmd, stream=True, user="nonroot")
-
-    for chunk in output:
-        logger.info(f"[Container] {chunk.decode('utf-8').strip()}")
+    # stream=True via exec_run does not return a reliable exit code (often None).
+    # Use exec_create/exec_start/exec_inspect so we can stream logs and read ExitCode.
+    exec_id = container.client.api.exec_create(
+        container.id,
+        cmd,
+        user="nonroot",
+    )["Id"]
+    stream = container.client.api.exec_start(exec_id, stream=True, demux=False)
+    for chunk in stream:
+        if chunk:
+            logger.info(f"[Container] {chunk.decode('utf-8').strip()}")
+    exit_code = container.client.api.exec_inspect(exec_id)["ExitCode"]
+    if exit_code != 0:
+        raise RuntimeError(f"Agent process exited with code {exit_code}")
 
 
 def clean_up(container: Container, logger: logging.Logger, retain: bool = False) -> bool:
@@ -150,7 +160,7 @@ def run_in_container(
         time_end = time.monotonic()
         logger.info(f"Run completed in {time_end - time_start:.2f} seconds.")
         return run_dir
-    except Exception as e:
-        raise e
+    except Exception:
+        raise
     finally:
         clean_up(container, logger, retain_container)
